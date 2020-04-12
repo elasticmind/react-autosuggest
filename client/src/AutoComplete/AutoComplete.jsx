@@ -6,7 +6,7 @@ import './autoComplete.css';
 export class AutoComplete extends React.Component {
   constructor(props) {
     super(props);
-    
+    this.cache = {};
     this.state = {
       value: '',
       filteredSuggestions: props.suggestions,
@@ -56,10 +56,16 @@ export class AutoComplete extends React.Component {
     this.updateValueAndSuggestions(event.target.value);
   }
   
-  handleClickItem(value) {
-    this.updateValueAndSuggestions(value);
-    this.setState({ index: 0 });
-    this.searchInput.current.focus();
+  handleClickItem = (value) => {
+    if (!this.cache[value]) {
+      this.cache[value] = () => {
+        this.updateValueAndSuggestions(value);
+        this.setState({ index: 0 });
+        this.searchInput.current.focus();
+      }
+    }
+
+    return this.cache[value];
   }
 
   render() {
@@ -83,7 +89,7 @@ export class AutoComplete extends React.Component {
               <li
                 key={`${suggestion}${index}`}
                 className={`suggestion-list__item ${index === this.state.index && 'suggestion-list__item--active'}`}
-                onClick={() => this.handleClickItem(suggestion)}
+                onClick={this.handleClickItem(suggestion)}
               >
                 <span className="suggestion--matched">{suggestion.slice(0, value.length)}</span>
                 <span>{suggestion.slice(value.length)}</span>
